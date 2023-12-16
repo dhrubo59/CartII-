@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Landslide Scenario in California</title>
+    <style>
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            background-color: black;
+            margin: 0;
+        }
+
+        #legendDiv {
+            float: left;
+            height: 30px;
+            width: 18%;
+            background-color: black;
+            color: white;
+            text-align: center;
+            padding-right: 0.5%;
+            font-weight: 400;
+            font-size: 22px;
+        }
+
+        #viewDiv {
+            padding: 1;
+            float: left;
+            left: 0;
+            margin: 0;
+            height: 85%;
+            width: 40.5%;
+        }
+
+        #legendview {
+            float: left;
+            width: 20%;
+            height: 85%;
+            background-color: gray;
+            margin-top: 5px;
+        }
+
+        #viewDiv2,
+        #viewDiv3 {
+            padding: 1;
+            float: right;
+            margin: 0px;
+            width: 38.5%;
+        }
+
+        #viewDiv2 {
+            margin-bottom: 0.5%;
+            height: 40%;
+        }
+
+        #viewDiv3 {
+            margin-top: 0.5%;
+            height: 40%;
+        }
+
+        .FaulttitleDiv {
+            padding: 0;
+            float: right;
+            margin: 0;
+            width: 40%;
+            background-color: black;
+            color: white;
+            text-align: center;
+            padding-right: 0.5%;
+            font-weight: 400;
+            font-size: 22px;
+        }
+
+        .titleDiv {
+            float: left;
+            height: 34px;
+            width: 40%;
+            background-color: black;
+            color: white;
+            text-align: center;
+            padding-right: 0.5%;
+            font-weight: 400;
+            font-size: 22px;
+        }
+
+        #populationTitle {
+            float: left;
+            height: 31px;
+            width: 38.5%;
+            background-color: black;
+            color: white;
+            text-align: center;
+            padding-right: 0.5%;
+            font-weight: 400;
+            font-size: 22px;
+        }
+
+        #header {
+            width: 100%;
+            background-color: rgb(96, 153, 202);
+            height: 10%;
+            text-align: center;
+            color: white;
+        }
+    </style>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.28/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.28/"></script>
+
+    <script>
+        require([
+            "esri/Map",
+            "esri/views/MapView",
+            "esri/layers/FeatureLayer",
+            "esri/symbols/SimpleFillSymbol",
+            "esri/renderers/SimpleRenderer",
+            "esri/layers/CSVLayer",
+            "esri/layers/MapImageLayer",
+            "esri/layers/ImageryLayer",
+            "esri/widgets/LayerList"
+        ], function (Map, MapView, FeatureLayer, SimpleFillSymbol, SimpleRenderer, CSVLayer, MapImageLayer, ImageryLayer, LayerList) {
+
+            var map = new Map({
+                basemap: "dark-gray"
+            });
+
+            var view1 = new MapView({
+                container: "viewDiv",
+                map: map,
+                zoom: 5,
+                center: [-119.80454, 36.78280]
+            });
+
+            var view2 = new MapView({
+                container: "viewDiv2",
+                map: new Map({
+                    basemap: "dark-gray"
+                }),
+                zoom: 5,
+                center: [-119.80454, 36.78280]
+            });
+
+            var view3 = new MapView({
+                container: "viewDiv3",
+                map: new Map({
+                    basemap: "dark-gray"
+                }),
+                zoom: 5,
+                center: [-119.80454, 36.78280]
+            });
+
+            function createSymbol(color) {
+                return {
+                    type: "simple-fill",
+                    color: color,
+                    outline: {
+                        width: 0.5,
+                        color: [255, 255, 255, 0.4]
+                    },
+                    style: "solid"
+                };
+            }
+
+            var renderer = {
+                type: "class-breaks",
+                field: "POP100",
+                normalizationType: "percent-of-total",
+                normalizationTotal: 37253956,
+                classBreakInfos: [{
+                    minValue: 0,
+                    maxValue: 0.5,
+                    symbol: createSymbol("#fee08b"),
+                    label: "0.0 - 0.58%"
+                },
+                {
+                    minValue: 0.59,
+                    maxValue: 1.5,
+                    symbol: createSymbol("#ef3b2c"),
+                    label: "0.59 - 1.38%"
+                },
+                {
+                    minValue: 1.8,
+                    maxValue: 4.1,
+                    symbol: createSymbol("#cb181d"),
+                    label: "1.83 - 4.05%"
+                },
+                {
+                    minValue: 4.7,
+                    maxValue: 8.32,
+                    symbol: createSymbol("#a50f15"),
+                    label: "4.78 - 8.31%"
+                },
+                {
+                    minValue: 8.32,
+                    maxValue: 27,
+                    symbol: createSymbol("#67000d"),
+                    label: "8.32 - 26.3558%"
+                }
+                ]
+            };
+
+            var countiesLayer = new FeatureLayer({
+                url: "https://tigerweb.geo.census.gov/arcgis/rest/services/Census2020/State_County/MapServer/31",
+                definitionExpression: "STATE = '06'", 
+                renderer: renderer
+            });
+
+            
+            view1.map.remove(countiesLayer);
+
+            
+            view3.map.add(countiesLayer);
+
+            const landRenderer = {
+                type: "unique-value",
+                legendOptions: {
+                    title: "Landslide category"
+                },
+                field: "landslide_size",
+                uniqueValueInfos: [{
+                    value: "small",
+                    symbol: {
+                        type: "simple-marker",
+                        style: "circle",
+                        color: "orange",
+                        size: "8px",
+                        outline: {
+                            color: [0, 0, 0],
+                            width: 1
+                        }
+                    },
+                    label: "small"
+                },
+                {
+                    value: "medium",
+                    symbol: {
+                        type: "simple-marker",
+                        style: "circle",
+                        color: "DodgerBlue",
+                        size: "8px",
+                        outline: {
+                            color: [0, 0, 0],
+                            width: 1
+                        }
+                    },
+                    label: "medium"
+                },
+                {
+                    value: "large",
+                    symbol: {
+                        type: "simple-marker",
+                        style: "circle",
+                        color: "Yellow",
+                        size: "8px",
+                        outline: {
+                            color: [0, 0, 0],
+                            width: 1
+                        }
+                    },
+                    label: "large"
+                },
+                {
+                    value: "very_large",
+                    symbol: {
+                        type: "simple-marker",
+                        style: "circle",
+                        color: "purple",
+                        size: "8px",
+                        outline: {
+                            color: [0, 0, 0],
+                            width: 1
+                        }
+                    },
+                    label: "very large"
+                },
+                {
+                    value: "catastrophic",
+                    symbol: {
+                        type: "simple-marker",
+                        style: "circle",
+                        color: "red",
+                        size: "8px",
+                        outline: {
+                            color: [0, 0, 0],
+                            width: 1
+                        }
+                    },
+                    label: "catastrophic"
+                },
+                {
+                    value: "unknown",
+                    symbol: {
+                        type: "simple-marker",
+                        style: "circle",
+                        color: "White",
+                        size: "8px",
+                        outline: {
+                            color: [0, 0, 0],
+                            width: .3
+                        }
+                    },
+                    label: "unknown"
+                }
+                ]
+            };
+            var url1 = "https://dl.dropboxusercontent.com/scl/fi/sn9imjc9pbcdrbstcfdeu/Landslides.csv?rlkey=saczi9j2ez6okt30bhada3gqh&dl=0";
+            var template = {
+                title: "Landslide Info",
+                content: [{
+                    type: "fields",
+                    fieldInfos: [{
+                        fieldName: "event_title",
+                        label: "Event_title",
+                    },
+                    {
+                        fieldName: "event_date",
+                        label: "event_date",
+                    },
+                    {
+                        fieldName: "landslide_category",
+                        label: "landslide_category",
+                    },
+                    {
+                        fieldName: "landslide_trigger",
+                        label: "landslide_trigger",
+                    },
+                    {
+                        fieldName: "landslide_size",
+                        label: "landslide_size",
+                    },
+                    {
+                        fieldName: "gazetteer_closest_point",
+                        label: "gazetteer_closest_point"
+                    },
+                    {
+                        fieldName: "photo_link",
+                        label: "photo_link"
+                    },
+                    {
+                        fieldName: "event_description",
+                        label: "event_description",
+                    }
+                    ]
+                }]
+            };
+            var landslidesLayer = new CSVLayer({
+                url: url1,
+                copyright: "USGS",
+                popupTemplate: template,
+                renderer: landRenderer
+            });
+
+            view1.map.add(landslidesLayer);
+
+            var faultLayer = new MapImageLayer({
+                url: "https://gis.conservation.ca.gov/server/rest/services/CGS/FaultActivityMapCA/MapServer",
+                visible: true
+            });
+
+            view2.map.add(faultLayer);
+
+
+
+            const views = [view1, view2, view3];
+            let active;
+
+            const sync = (source) => {
+                if (!active || !active.viewpoint || active !== source) {
+                    return;
+                }
+
+                for (const view of views) {
+                    if (view !== active) {
+                        view.viewpoint = active.viewpoint;
+                    }
+                }
+            };
+
+            for (const view of views) {
+                view.watch(["interacting", "animation"], () => {
+                    active = view;
+                    sync(active);
+                });
+
+                view.watch("viewpoint", () => sync(view));
+            }
+
+            var layerlist1 = new LayerList({
+                container: "legendview",
+                view: view1,
+                listItemCreatedFunction: function (event) {
+                    const item = event.item;
+                    if (item.layer.type != "group") { 
+                        item.panel = {
+                            content: "legend",
+                            open: true
+                        };
+                    }
+                }
+            });
+            var layerlist2 = new LayerList({
+                container: "legendview",
+                view: view2,
+                listItemCreatedFunction: function (event) {
+                    const item = event.item;
+                    if (item.layer.type != "group") { 
+                        item.panel = {
+                            content: "legend",
+                            open: true
+                        };
+                    }
+                }
+            });
+            var layerlist3 = new LayerList({
+                container: "legendview",
+                view: view3,
+                listItemCreatedFunction: function (event) {
+                    const item = event.item;
+                    if (item.layer.type != "group") { 
+                        item.panel = {
+                            content: "legend",
+                            open: true
+                        };
+                    }
+                }
+            });
+
+        });
+    </script>
+</head>
+
+<body>
+
+    <div id="header" style="display: table; height: 15px; overflow: hidden;">
+        <h1 style="vertical-align: middle">Landslide Scenario in California</h1>
+    </div>
+    <div id="legendDiv">Legend</div>
+    <div class="titleDiv">Landslides From 1916 to 2020</div>
+
+    <div class="FaulttitleDiv">Fault Activity</div>
+    <div id="legendview"></div>
+    <div id="viewDiv"></div>
+    <div id="viewDiv2"></div>
+    <div id="populationTitle">State counties by % population</div>
+    <div id="viewDiv3"></div>
+
+</body>
+
+</html>
